@@ -8,17 +8,60 @@
 
     # Feel free to split up your configuration and import pieces of it here.
   ];
+# Configure Home Manager settings.
+  home.username = "marcschulz";
+  home.homeDirectory = "/home/marcschulz";
 
-  # Comment out if you wish to disable unfree packages for your system
+  # Home Manager state version - better not change it.
+  home.stateVersion = "22.05";
+
+  # Let Home Manager install and manage itself.
+  programs.home-manager.enable = true;
+
+  # Allow unfree packages.
   nixpkgs.config.allowUnfree = true;
 
-  # Add stuff for your user as you see fit:
-  # programs.neovim.enable = true;
-  # home.packages = with pkgs; [ steam ];
-
-  # Enable home-manager and git
-  programs.home-manager.enable = true;
-  programs.git.enable = true;
+  # Specify Home Manager packages.
+  home.packages = with pkgs; [
+    bitwarden
+    postman
+    python
+    jetbrains.pycharm-professional
+    jetbrains.jdk
+    keepassxc
+    vlc
+    gimp
+    clang
+    vscode
+    blender
+    cudatoolkit
+    libreoffice
+    nodejs
+    discord
+    neofetch
+    audacity
+  ];
+  programs.git = {
+    enable = true;
+    userName  = "marcleonschulz";
+    userEmail = "marcleonschulz@gmail.com";
+  };
+  programs.zsh = {
+    enable = true;
+    shellAliases = {
+      ll = "ls -l";
+      update = "sudo nixos-rebuild switch";
+    };
+    history = {
+      size = 10000;
+      path = "${config.xdg.dataHome}/zsh/history";
+    };
+    oh-my-zsh = {
+      enable = true;
+      plugins = [ "git" ];
+      theme = "robbyrussell";
+    };
+  };
 
   # Nicely reload system units when changing configs
   systemd.user.startServices = "sd-switch";
