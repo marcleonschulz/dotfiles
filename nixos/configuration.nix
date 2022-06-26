@@ -30,8 +30,6 @@
 
   nix = {
     # Make sure we have at least nix 2.4
-    # TODO: You can remove me if you're using NixOS 22.05+
-    package = pkgs.nixFlakes;
     # Enable flakes and new 'nix' command
     extraOptions = ''
       experimental-features = nix-command flakes
@@ -39,41 +37,98 @@
     autoOptimiseStore = true;
   };
 
-  # Remove if you wish to disable unfree packages for your system
+  # unfree packages for your system
   nixpkgs.config.allowUnfree = true;
-
-  # FIXME: Add the rest of your current configuration
-
-  # TODO: Set your hostname
-  networking.hostName = "your-hostname";
-
-  # TODO: This is just an example, be sure to use whatever bootloader you prefer
+  
+  #disable if non nvidia graphics card is used
+  services.xserver.videoDrivers = [ "nvidia" ];
+  # Bootloader.
   boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.efi.efiSysMountPoint = "/boot/efi";
 
-  # TODO: Configure your system-wide user settings (groups, etc), add more users as needed.
+  # Setup keyfile
+  boot.initrd.secrets = {
+    "/crypto_keyfile.bin" = null;
+  };
+
+  # Enable networking
+  networking.networkmanager.enable = true;
+
+  # Set your time zone.
+  time.timeZone = "Europe/Berlin";
+
+  # Select internationalisation properties.
+  i18n.defaultLocale = "en_US.utf8";
+
+  i18n.extraLocaleSettings = {
+    LC_ADDRESS = "de_DE.utf8";
+    LC_IDENTIFICATION = "de_DE.utf8";
+    LC_MEASUREMENT = "de_DE.utf8";
+    LC_MONETARY = "de_DE.utf8";
+    LC_NAME = "de_DE.utf8";
+    LC_NUMERIC = "de_DE.utf8";
+    LC_PAPER = "de_DE.utf8";
+    LC_TELEPHONE = "de_DE.utf8";
+    LC_TIME = "de_DE.utf8";
+  };
+
+  # Enable the X11 windowing system.
+  services.xserver.enable = true;
+
+  # Enable the GNOME Desktop Environment.
+  services.xserver.displayManager.gdm.enable = true;
+  services.xserver.desktopManager.gnome.enable = true;
+
+  # Configure keymap in X11
+  services.xserver = {
+    layout = "us";
+    xkbVariant = "";
+  };
+
+  # Enable CUPS to print documents.
+  services.printing.enable = true;
+
+  # Enable sound with pipewire.
+  sound.enable = true;
+  hardware.pulseaudio.enable = false;
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    # If you want to use JACK applications, uncomment this
+    #jack.enable = true;
+
+    # use the example session manager (no others are packaged yet so this is enabled by default,
+    # no need to redefine it in your config for now)
+    #media-session.enable = true;
+  };
+
+  environment.systemPackages = with pkgs; [
+  (pkgs.writeShellScriptBin "nixFlakes" ''
+      exec ${pkgs.nixFlakes}/bin/nix --experimental-features "nix-command flakes" "$@"
+    '')
+    wget
+    git
+    vim
+    firefox
+    vscode
+    zsh
+  ];
+  #Set your hostname
+  networking.hostName = "nixos";
+
   users.users = {
     # FIXME: Replace with your username
-    your-name = {
-      # TODO: You can set an initial password for your user.
+    marcschulz = {
+      shell = pkgs.zsh;
       # If you do, you can skip setting a root password by passing '--no-root-passwd' to nixos-install.
       # Be sure to change it (using passwd) after rebooting!
       # initialPassword = "correcthorsebatterystaple";
       isNormalUser = true;
-      openssh.authorizedKeys.keys = [
-        # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
-      ];
-      # TODO: Be sure to add any other groups you need (such as networkmanager, audio, docker, etc)
-      extraGroups = [ "wheel" ];
+      extraGroups = [ "wheel" "networkmanager" "audio" "docker" ];
     };
-  };
-
-  # This setups a SSH server. Very important if you're setting up a headless system.
-  # Feel free to remove if you don't need it.
-  services.openssh = {
-    enable = true;
-    # Forbid root login through SSH.
-    permitRootLogin = "no";
-    # Use keys only. Remove if you want to SSH using password (not recommended)
-    passwordAuthentication = false;
   };
 }
